@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abarrotes LUPITA - Pedidos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="fas fa-store"></i></div>
+            <div class="logo-text">
+                <h1>Abarrotes</h1>
+                <h1 class="brand-name">LUPITA</h1>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-btn" onclick="location.href='index.html'">Inicio</button>
+            <button class="nav-btn active">Pedidos</button>
+            <button class="nav-btn" onclick="location.href='clients.html'">Clientes</button>
+            <button class="nav-btn" onclick="location.href='reportes.html'">Reportes</button>
+        </nav>
+        <div class="user-welcome">
+            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal de Pedidos -->
+    <main>
+        <div id="section-pedidos" class="main-content">
+            
+            <!-- Botones de Acción Superiores -->
+            <div class="top-actions">
+                <button class="btn-action-red" onclick="location.href='tienda.html'"><i class="fas fa-shopping-cart"></i> Nuevo Pedido</button>
+                <button class="btn-action-dark" onclick="location.href='index.html'"><i class="fas fa-times-circle"></i> Cancelar Pedido</button>
+            </div>
+
+            <!-- Pestañas de Estado -->
+            <div class="tabs-pedidos">
+                <button class="tab active">Pendientes (5)</button>
+                <button class="tab">Enviados (12)</button>
+                <button class="tab">Cancelados</button>
+                <button class="tab">Todos</button>
+            </div>
+
+            <div class="pedidos-container-flex">
+                <!-- Columna de la Tabla -->
+                <div class="table-wrapper">
+                    <div class="table-search-bar">
+                        <label>ID de Pedido <input type="text" placeholder="🔍"></label>
+                        <label>Cliente <input type="text"></label>
+                        <label>Método de Pago 
+                            <select><option>Todos</option></select>
+                        </label>
+                        <label>Acciones 
+                            <select><option>Por producto</option></select>
+                        </label>
+                    </div>
+
+                    <table class="pedidos-table">
+                        <thead>
+                            <tr>
+                                <th>ID de Pedido</th>
+                                <th>Cliente</th>
+                                <th>Fecha/Hora <i class="fas fa-calendar-alt" style="margin-left:6px;color:#666"></i></th>
+                                <th>Método de Pago</th>
+                                <th>Artículos (Cant.)</th>
+                                <th>Total ($)</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody">
+                            <tr>
+                                <td>Pedido 1234</td>
+                                <td>María G.</td>
+                                <td>07/07/2026 16:00 p.m.</td>
+                                <td><i class="fab fa-paypal" style="color: #003087;"></i> PayPal</td>
+                                <td>2</td>
+                                <td><strong>$24.90</strong></td>
+                                <td class="status-pending">Pendiente</td>
+                                <td>
+                                    <div class="table-btns">
+                                        <button class="btn-table">Ver Detalle</button>
+                                        <button class="btn-table">Marcar como Enviado</button>
+                                        <button class="btn-table">Imprimir Ticket</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Más filas aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Columna de Estadísticas (Sidebar) -->
+                <aside class="stats-sidebar">
+                    <h3>Pedidos del Día</h3>
+                    <div class="stat-item"><span>Pedidos Totales</span> <strong>35</strong></div>
+                    <div class="stat-item"><span>Ventas Totales ($)</span> <strong>$5</strong></div>
+                    <div class="stat-item"><span>Total ($)</span> <strong>60</strong></div>
+                    
+                    <div class="chart-container">
+                        <p>Pedidos por hora</p>
+                        <div class="bar-chart">
+                            <div class="bar" style="height: 20%"></div>
+                            <div class="bar" style="height: 40%"></div>
+                            <div class="bar" style="height: 60%"></div>
+                            <div class="bar" style="height: 80%"></div>
+                            <div class="bar" style="height: 100%"></div>
+                            <div class="bar" style="height: 50%"></div>
+                        </div>
+                        <div class="chart-labels"><span>0</span><span>3</span><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bottom-nav">
+        <button class="footer-btn" id="footer-cart-btn"><i class="fas fa-shopping-cart"></i> Ver Carrito <span id="cart-count" class="cart-count">0</span></button>
+    </footer>
+
+    <!-- Modal del Carrito y Pagos (copiado para funcionalidad) -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ver Carrito y Pagos</h3>
+                <span class="close-modal" onclick="closeCart()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Columna Izquierda: Envío y Productos -->
+                <div class="col-left">
+                    <section class="checkout-section">
+                        <h4>Datos de Envío</h4>
+                        <div class="form-grid">
+                            <input type="text" id="cliente-name" placeholder="Nombre del cliente" class="full-width">
+                            <input type="text" placeholder="Dirección" class="full-width">
+                            <input type="text" placeholder="Ciudad">
+                            <input type="text" placeholder="Código Postal">
+                            <input type="text" placeholder="Estado/Código">
+                            <input type="text" placeholder="Teléfono">
+                        </div>
+                    </section>
+
+                    <section class="checkout-section">
+                        <h4>Lista de Productos</h4>
+                        <div id="cart-items-list">
+                            <!-- Los productos seleccionados serán renderizados aquí por script.js -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Columna Derecha: Pagos y Totales -->
+                <div class="col-right">
+                    <section class="checkout-section">
+                        <h4>Opciones de Pago</h4>
+                        <div class="payment-methods">
+                            <label class="pay-option"><input type="radio" name="pay" value="PayPal"> <i class="fab fa-paypal"></i> PayPal</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Mercado Pago"> <i class="fas fa-handshake"></i> Mercado Pago</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Tarjeta"> <i class="fas fa-credit-card"></i> Tarjeta Crédito/Débito</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Transferencia"> <i class="fas fa-university"></i> Transferencia</label>
+                        </div>
+                    </section>
+
+                    <section class="checkout-section calculator">
+                        <h4>Calculadora de Impuestos</h4>
+                        <div class="summary-line"><span>Subtotal:</span> <span id="subtotal">$165.40</span></div>
+                        <div class="summary-line"><span>IVA (16%):</span> <span id="tax">$15.00</span></div>
+                        <div class="summary-line total"><span>Total a Pagar:</span> <span id="total-final">$234.29</span></div>
+                        <button id="confirm-purchase-btn" class="confirm-btn" onclick="confirmPurchase()" disabled>Confirmar Compra</button>
+                    </section>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <h4>Confirmación de Compra</h4>
+                <p>Resumen de compra: Al confirmar la compra usted acepta el procesamiento de su pedido y el envío de los productos seleccionados.</p>
+                <label><input type="checkbox" id="terms-checkbox"> Acepto los términos e información de privacidad.</label>
+            </div>
+         </div>
+     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="seed-firestore.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Abarrotes LUPITA - Carrito</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="fas fa-store"></i></div>
+            <div class="logo-text">
+                <h1>Abarrotes</h1>
+                <h1 class="brand-name">LUPITA</h1>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-btn" onclick="location.href='index.html'">Inicio</button>
+            <button class="nav-btn" onclick="location.href='pedidos.html'">Pedidos</button>
+            <button class="nav-btn" onclick="location.href='clients.html'">Clientes</button>
+            <button class="nav-btn" onclick="location.href='reportes.html'">Reportes</button>
+        </nav>
+        <div class="user-welcome">
+            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+        </div>
+    </header>
+
+    <main class="catalog-container content-section" style="padding:20px;">
+        <h2>Ver Carrito</h2>
+        <div class="pedidos-container-flex" style="align-items:flex-start;">
+            <div class="table-wrapper">
+                <section class="checkout-section">
+                    <h4>Datos de Envío / Cliente</h4>
+                    <div class="form-grid">
+                        <input type="text" id="cliente-name" placeholder="Nombre del cliente" class="full-width">
+                        <input type="text" placeholder="Dirección" class="full-width">
+                        <input type="text" placeholder="Ciudad">
+                        <input type="text" placeholder="Código Postal">
+                        <input type="text" placeholder="Estado/Código">
+                        <input type="text" placeholder="Teléfono">
+                    </div>
+                </section>
+
+                <section class="checkout-section">
+                    <h4>Lista de Productos</h4>
+                    <div id="cart-items-list">
+                        <!-- Items renderizados por script.js -->
+                    </div>
+                </section>
+            </div>
+
+            <aside class="stats-sidebar" style="min-width:300px;">
+                <section class="checkout-section">
+                    <h4>Opciones de Pago</h4>
+                    <div class="payment-methods">
+                        <label class="pay-option"><input type="radio" name="pay" value="PayPal"> <i class="fab fa-paypal"></i> PayPal</label>
+                        <label class="pay-option"><input type="radio" name="pay" value="Tarjeta"> <i class="fas fa-credit-card"></i> Tarjeta</label>
+                        <label class="pay-option"><input type="radio" name="pay" value="Transferencia"> <i class="fas fa-university"></i> Transferencia</label>
+                    </div>
+                </section>
+
+                <section class="checkout-section calculator">
+                    <h4>Resumen</h4>
+                    <div class="summary-line"><span>Subtotal:</span> <span id="subtotal">$0.00</span></div>
+                    <div class="summary-line"><span>IVA (16%):</span> <span id="tax">$0.00</span></div>
+                    <div class="summary-line total"><span>Total a Pagar:</span> <span id="total-final">$0.00</span></div>
+                    <label style="display:block;margin-top:12px;"><input type="checkbox" id="terms-checkbox"> Acepto los términos e información de privacidad.</label>
+                    <button id="confirm-purchase-btn" class="confirm-btn" onclick="confirmPurchase()" disabled style="margin-top:12px;">Confirmar Compra</button>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="bottom-nav">
+        <button class="footer-btn" onclick="location.href='index.html'"><i class="fas fa-home"></i> Inicio</button>
+        <button class="footer-btn" onclick="location.href='pedidos.html'"><i class="fas fa-list"></i> Pedidos</button>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Inicializar vista del carrito al cargar esta página
+        document.addEventListener('DOMContentLoaded', ()=>{
+            if (typeof renderCart === 'function') renderCart();
+            if (typeof updateTotals === 'function') updateTotals();
+            // terms checkbox handler (script.js already sets up a listener, but ensure initial state)
+            const terms = document.getElementById('terms-checkbox');
+            const confirmBtn = document.getElementById('confirm-purchase-btn');
+            if (terms && confirmBtn) {
+                confirmBtn.disabled = !terms.checked;
+                terms.addEventListener('change', ()=> confirmBtn.disabled = !terms.checked);
+            }
+        });
+    </script>
+</body>
+</html>

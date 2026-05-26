@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reportes - Abarrotes LUPITA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="fas fa-store"></i></div>
+            <div class="logo-text">
+                <h1>Abarrotes</h1>
+                <h1 class="brand-name">LUPITA</h1>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-btn" onclick="location.href='index.html'">Inicio</button>
+            <button class="nav-btn" onclick="location.href='pedidos.html'">Pedidos</button>
+            <button class="nav-btn" onclick="location.href='clients.html'">Clientes</button>
+            <button class="nav-btn active">Reportes</button>
+        </nav>
+        <div class="user-welcome">
+            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+        </div>
+    </header>
+
+    <main class="content-section reports-page">
+        <!-- Indicadores Rápidos (KPIs) -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0 20px;gap:12px;">
+            <div style="flex:1">
+                <h2 style="margin:0 0 6px 0">Reportes</h2>
+                <div style="color:#666">KPIs y seguimiento</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <label style="font-size:0.9rem;color:#333;margin-right:6px;">Periodo:</label>
+                <select id="reports-period-select">
+                    <option value="day">Día</option>
+                    <option value="week">Semana</option>
+                    <option value="month" selected>Mes</option>
+                </select>
+            </div>
+        </div>
+        <div class="reports-summary" id="reports-summary">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- Gráficas y tablas -->
+        <div class="reports-grid">
+            <div class="report-box card-abandoned">
+                <div class="box-header">
+                    <h3>🛒 Seguimiento de Carritos Abandonados</h3>
+                    <div>
+                        <button class="view-all" onclick="location.href='carritos.html'">Ver todos</button>
+                    </div>
+                </div>
+                <table class="report-table" id="report-abandoned-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente / ID</th>
+                            <th>Monto</th>
+                            <th>Última Actividad</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-abandoned-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="report-box card-chart">
+                <h3>📈 Ventas Semanales</h3>
+                <div class="chart-placeholder">
+                    <div class="bar-chart" id="weekly-sales-chart">
+                        <!-- bars inserted by JS or left as static fallback -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tablas de detalle: productos más vendidos -->
+        <div style="margin:20px;">
+            <h3>Productos más vendidos</h3>
+            <table class="report-table" id="top-products-table">
+                <thead>
+                    <tr><th>Producto</th><th>Unidades Vendidas</th><th>Ingresos</th></tr>
+                </thead>
+                <tbody id="top-products-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- Reportes enviados por clientes -->
+        <div style="margin:20px;">
+            <h3>Reportes de Clientes</h3>
+            <table class="report-table" id="client-reports-table">
+                <thead>
+                    <tr><th>ID Reporte</th><th>Pedido</th><th>Cliente</th><th>Contacto</th><th>Mensaje</th><th>Fecha</th></tr>
+                </thead>
+                <tbody id="client-reports-tbody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="seed-firestore.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - Abarrotes LUPITA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* minor overrides to keep file self-contained if styles.css missing */
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="fas fa-store"></i></div>
+            <div class="logo-text">
+                <h1>Abarrotes</h1>
+                <h1 class="brand-name">LUPITA</h1>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-btn" onclick="location.href='index.html'">Inicio</button>
+            <button class="nav-btn" onclick="location.href='pedidos.html'">Pedidos</button>
+            <button class="nav-btn active">Clientes</button>
+            <button class="nav-btn" onclick="location.href='reportes.html'">Reportes</button>
+        </nav>
+        <div class="user-welcome">
+            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+        </div>
+    </header>
+
+    <main class="content-section clients-container">
+        <div class="clients-top">
+            <div class="clients-search">
+                <input id="clients-search" type="search" placeholder="Buscar por nombre, teléfono o ID" />
+                <div class="quick-filters">
+                    <button class="filter-btn active" data-filter="all">Todos</button>
+                    <button class="filter-btn" data-filter="credit">Con Crédito Pendiente</button>
+                    <button class="filter-btn" data-filter="frequent">Clientes Frecuentes</button>
+                </div>
+            </div>
+            <div>
+                <button id="new-client-btn" class="btn-action btn-red-gradient">Nuevo Cliente</button>
+            </div>
+        </div>
+
+        <div id="clients-grid" class="clients-grid">
+            <!-- tarjetas de clientes generadas por JS -->
+        </div>
+
+        <!-- Panel lateral para crear/editar cliente -->
+        <aside id="client-panel" class="client-panel">
+            <div class="panel-header">
+                <h3 id="panel-title">Nuevo Cliente</h3>
+                <button class="close-modal" onclick="closeClientPanel()">&times;</button>
+            </div>
+            <div class="panel-body">
+                <label>Nombre
+                    <input id="client-name" type="text" placeholder="Nombre completo">
+                </label>
+                <label>Teléfono
+                    <input id="client-phone" type="tel" placeholder="55 1234 5678">
+                </label>
+                <label>Dirección
+                    <input id="client-address" type="text" placeholder="Calle, colonia, ciudad">
+                </label>
+                <label>Límite de crédito
+                    <input id="client-credit" type="number" min="0" value="0">
+                </label>
+                <div class="panel-actions">
+                    <button class="btn-action btn-dark" onclick="closeClientPanel()">Cancelar</button>
+                    <button id="save-client-btn" class="btn-action btn-red-gradient" onclick="saveClientFromPanel()">Guardar Cliente</button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="seed-firestore.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

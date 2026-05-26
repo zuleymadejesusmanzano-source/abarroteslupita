@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carritos Abandonados - Abarrotes LUPITA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ </head>
+<body>
+    <header class="main-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="fas fa-store"></i></div>
+            <div class="logo-text">
+                <h1>Abarrotes</h1>
+                <h1 class="brand-name">LUPITA</h1>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-btn" onclick="location.href='index.html'">Inicio</button>
+            <button class="nav-btn" onclick="location.href='pedidos.html'">Pedidos</button>
+            <button class="nav-btn" onclick="location.href='clients.html'">Clientes</button>
+            <button class="nav-btn active">Reportes</button>
+        </nav>
+        <div class="user-welcome">
+            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+        </div>
+    </header>
+
+    <main class="content-section">
+        <div class="report-header" style="display:flex;justify-content:space-between;align-items:center;padding:20px;">
+            <h2>Carritos Abandonados</h2>
+            <div style="color:#666">Monitoreo de carritos en estado <strong>abandonado</strong></div>
+        </div>
+
+        <div class="table-container" style="margin:0 20px 40px 20px;">
+            <table class="pedidos-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>ID del Carrito</th>
+                        <th>Cliente / Email</th>
+                        <th>Monto</th>
+                        <th>Último Movimiento</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="carts-tbody">
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="seed-firestore.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

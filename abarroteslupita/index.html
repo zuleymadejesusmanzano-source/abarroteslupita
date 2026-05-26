@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abarrotes LUPITA - Punto de Venta</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Estilos mínimos para modal de admin y botones */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1600; align-items:center; justify-content:center; padding:20px; }
+        .modal.open { display:flex; }
+        .modal-content { background:#fff; border-radius:8px; width:420px; max-width:95%; box-shadow:0 8px 30px rgba(0,0,0,0.2); overflow:hidden; }
+        .modal-header, .modal-footer { padding:12px 16px; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:space-between; }
+        .modal-body { padding:16px; }
+        .close-modal { background:transparent; border:none; font-size:20px; cursor:pointer; }
+        .login-form input { width:100%; padding:10px 12px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; }
+        #admin-login-message { min-height:18px; margin-top:6px; color:#c00; font-size:13px; }
+        /* Logout button styled black */
+        #admin-logout-btn { display:none; margin-left:8px; background:#000; color:#fff; border-radius:6px; padding:8px 10px; border:none; cursor:pointer; }
+        .user-welcome .welcome-btn, .user-welcome .admin-btn { padding:8px 10px; border-radius:6px; border:none; cursor:pointer; }
+        /* Nav badges for pedidos */
+        .nav-btn { position:relative; padding:8px 12px; border-radius:6px; border:none; background:transparent; cursor:pointer; font-weight:600; }
+        .nav-btn .badge { background:var(--accent, #d92b2b); color:#fff; border-radius:999px; padding:3px 8px; font-size:12px; margin-left:8px; vertical-align:middle; }
+        /* visually separate the two pedidos buttons a bit */
+        #pedidos-enviados-btn { margin-left:8px; }
+
+        /* Header: fondo rojo y botones tipo 'pill' */
+        .main-header{
+            background: linear-gradient(180deg,#c81f1f 0%, #b31a1a 100%);
+            padding:12px 18px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:18px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        .logo-section { display:flex; align-items:center; gap:12px; color:#fff; }
+        .logo-icon i { color:#fff; font-size:20px; }
+        .logo-text h1{ margin:0; color:#fff; font-weight:700; line-height:1; }
+        .brand-name { letter-spacing:1px; }
+
+        .nav-menu { display:flex; gap:12px; align-items:center; }
+        /* reutilizamos .nav-btn pero con estilo pill grande */
+        .nav-menu .nav-btn {
+            background:#333;
+            color:#fff;
+            padding:10px 16px;
+            border-radius:10px;
+            border:none;
+            cursor:pointer;
+            font-weight:700;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+            transition:transform .12s ease, box-shadow .12s ease, opacity .12s;
+        }
+        .nav-menu .nav-btn:hover { transform:translateY(-3px); box-shadow:0 12px 24px rgba(0,0,0,0.22); }
+        .nav-menu .nav-btn.active { background:#222; box-shadow:0 14px 30px rgba(0,0,0,0.28); }
+
+        /* botón de bienvenida (a la derecha) */
+        .user-welcome { display:flex; align-items:center; gap:8px; }
+        .user-welcome .welcome-pill {
+            background:#333;
+            color:#fff;
+            padding:10px 16px;
+            border-radius:10px;
+            border:none;
+            font-weight:700;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+        }
+
+        /* ocultar badges pequeños si existían (no usados en este diseño) */
+        .nav-menu .badge { display:none; }
+
+        /* conservar otros estilos existentes debajo */
+    </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="fas fa-store"></i></div>
+            <div class="logo-text">
+                <h1>Abarrotes</h1>
+                <h1 class="brand-name">LUPITA</h1>
+            </div>
+        </div>
+        <nav class="nav-menu" aria-label="Navegación principal">
+            <button class="nav-btn active" onclick="location.href='index.html'">Inicio</button>
+
+            <button id="pedidos-pendientes-btn" class="nav-btn" onclick="location.href='pedidos.html?filter=pendiente'">
+                Pedidos
+            </button>
+
+            <button class="nav-btn" onclick="location.href='clients.html'">Clientes</button>
+
+            <button class="nav-btn" onclick="location.href='reportes.html'">Reportes</button>
+        </nav>
+
+        <div class="user-welcome">
+            <button id="welcome-pill" class="welcome-pill" title="Bienvenida" onclick="location.href='bienvenida.html'">Bienvenida</button>
+        </div>
+    </header>
+
+    <!-- Admin seeding panel (visible only with ?admin=1) -->
+    <div id="admin-seed-panel" style="display:none; position:fixed; right:12px; top:80px; background:#fff; border:2px solid #d31d1d; padding:10px; border-radius:8px; z-index:1500; box-shadow:0 4px 12px rgba(0,0,0,0.12);">
+        <strong style="color:#a31616;display:block;margin-bottom:8px;">Admin - Datos de Prueba</strong>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:200px;">
+            <button onclick="seedProductosToFirestore()" style="padding:8px;border-radius:6px;background:#f02d2d;color:#fff;border:none;cursor:pointer;">Cargar Productos</button>
+            <button onclick="seedPedidosToFirestore()" style="padding:8px;border-radius:6px;background:#444;color:#fff;border:none;cursor:pointer;">Cargar Pedidos</button>
+            <button onclick="seedAllData()" style="padding:8px;border-radius:6px;background:#0066cc;color:#fff;border:none;cursor:pointer;">Cargar Todo</button>
+            <button onclick="clearPedidos()" style="padding:8px;border-radius:6px;background:#999;color:#fff;border:none;cursor:pointer;">Eliminar Pedidos</button>
+            <button onclick="this.parentElement.parentElement.style.display='none'" style="padding:6px;border-radius:6px;background:transparent;border:1px solid #ccc;cursor:pointer;">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Estado: Tarjetas grandes para Pedidos -->
+    <!-- <section class="status-cards" aria-label="Estado de pedidos">
+        <div id="pending-card" class="status-card-large" role="button" tabindex="0" onclick="location.href='pedidos.html?filter=pendiente'">
+            <div class="icon" aria-hidden="true"><i class="fas fa-store-alt"></i></div>
+            <div class="meta">
+                <div class="title">Pedidos Pendientes</div>
+                <div class="count"><span id="pending-count-large">0</span> <small>Ver</small></div>
+            </div>
+        </div>
+
+        <div id="sent-card" class="status-card-large" role="button" tabindex="0" onclick="location.href='pedidos.html?filter=enviado'">
+            <div class="icon" aria-hidden="true"><i class="fas fa-shipping-fast"></i></div>
+            <div class="meta">
+                <div class="title">Pedidos Enviados</div>
+                <div class="count"><span id="sent-count-large">0</span> <small>Ver</small></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mantengo botones de acción compactos debajo (opcionales) -->
+    <section class="action-bar" style="display:flex;gap:10px;align-items:center;margin-bottom:6px;">
+        <button class="btn-action btn-red-gradient" onclick="location.href='nuevo-pedido.html'">
+            <i class="fas fa-shopping-cart"></i> Nuevo Pedido
+        </button>
+        <button class="btn-action btn-dark" onclick="location.href='pedidos.html'">
+            <i class="fas fa-list"></i> Ver todos los pedidos
+        </button>
+        <button class="btn-action" onclick="location.href='carritos.html'">
+            <i class="fas fa-file-alt"></i> Reportes
+        </button>
+    </section -->
+
+    <!-- Catálogo con Filtros y Paginación -->
+    <main id="catalog-view" class="catalog-container content-section">
+        <div class="catalog-header">
+            <div class="header-info">
+                <h2>Catálogo de Productos</h2>
+                <p id="category-path">Categoría: <span id="current-category-name">Todas</span></p>
+            </div>
+            <div class="category-filters">
+                <button class="filter-btn active" onclick="filterCategory('Todas')">Todas</button>
+                <button class="filter-btn" onclick="filterCategory('Bebidas')">Bebidas</button>
+                <button class="filter-btn" onclick="filterCategory('Abarrotes')">Abarrotes</button>
+                <button class="filter-btn" onclick="filterCategory('Snacks')">Snacks</button>
+                <button class="filter-btn" onclick="filterCategory('Higiene')">Higiene</button>
+            </div>
+        </div>
+
+        <!-- Contenedor con botones laterales y grid central -->
+        <div class="catalog-body">
+            <button id="btn-prev" class="nav-page-btn side-btn" onclick="prevPage()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+
+            <!-- Contenedor donde JS insertará los productos -->
+            <div class="products-grid" id="products-grid">
+                <!-- Los productos se cargan dinámicamente aquí -->
+            </div>
+
+            <div id="edit-product-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="edit-product-title">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="edit-product-title">Editar Producto</h3>
+                        <button class="close-modal" type="button" onclick="closeEditProductModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
+                        <label>
+                            Nombre del producto
+                            <input type="text" name="edit-nombre" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;">
+                        </label>
+                        <label>
+                            Categoría
+                            <input type="text" name="edit-categoria" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;">
+                        </label>
+                        <label>
+                            Precio
+                            <input type="number" step="0.01" min="0" name="edit-precio" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;">
+                        </label>
+                        <label>
+                            Stock
+                            <input type="number" min="0" name="edit-stock" style="width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;">
+                        </label>
+                    </div>
+                    <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;">
+                        <button class="btn-action" type="button" onclick="closeEditProductModal()">Cancelar</button>
+                        <button class="btn-action btn-red-gradient" type="button" onclick="saveEditedProductModal()">Guardar</button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-next" class="nav-page-btn side-btn" onclick="nextPage()">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div class="pagination-info">
+            <span id="page-info">Página 1 de 3</span>
+        </div>
+        
+        <!-- Contenedor Principal de Pedidos -->
+        <div id="section-pedidos" class="main-content" style="display:none;">
+            
+            <!-- Botones de Acción Superiores -->
+            <div class="top-actions">
+                <button class="btn-action-red"><i class="fas fa-shopping-cart"></i> Nuevo Pedido</button>
+            </div>
+
+            <!-- Pestañas de Estado -->
+            <div class="tabs-pedidos">
+                <button class="tab active">Pendientes (5)</button>
+                <button class="tab">Enviados (12)</button>
+                <button class="tab">Cancelados</button>
+                <button class="tab">Todos</button>
+            </div>
+
+            <div class="pedidos-container-flex">
+                <!-- Columna de la Tabla -->
+                <div class="table-wrapper">
+                    <div class="table-search-bar">
+                        <label>ID de Pedido <input type="text" placeholder="🔍"></label>
+                        <label>Cliente <input type="text"></label>
+                        <label>Método de Pago 
+                            <select><option>Todos</option></select>
+                        </label>
+                        <label>Acciones 
+                            <select><option>Por producto</option></select>
+                        </label>
+                    </div>
+
+                    <table class="pedidos-table">
+                        <thead>
+                            <tr>
+                                <th>ID de Pedido</th>
+                                <th>Cliente</th>
+                                <th>Fecha/Hora <i class="fas fa-calendar-alt" style="margin-left:6px;color:#666"></i></th>
+                                <th>Método de Pago</th>
+                                <th>Artículos (Cant.)</th>
+                                <th>Total ($)</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody">
+                            <tr>
+                                <td>Pedido 1234</td>
+                                <td>María G.</td>
+                                <td>07/07/2026 16:00 p.m.</td>
+                                <td><i class="fab fa-paypal" style="color: #003087;"></i> PayPal</td>
+                                <td>2</td>
+                                <td><strong>$24.90</strong></td>
+                                <td class="status-pending">Pendiente</td>
+                                <td>
+                                    <div class="table-btns">
+                                        <button class="btn-table">Ver Detalle</button>
+                                        <button class="btn-table">Marcar como Enviado</button>
+                                        <button class="btn-table">Imprimir Ticket</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Más filas aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Columna de Estadísticas (Sidebar) -->
+                <aside class="stats-sidebar">
+                    <h3>Pedidos del Día</h3>
+                    <div class="stat-item"><span>Pedidos Totales</span> <strong>35</strong></div>
+                    <div class="stat-item"><span>Ventas Totales ($)</span> <strong>$5</strong></div>
+                    <div class="stat-item"><span>Total ($)</span> <strong>60</strong></div>
+                    
+                    <div class="chart-container">
+                        <p>Pedidos por hora</p>
+                        <div class="bar-chart">
+                            <div class="bar" style="height: 20%"></div>
+                            <div class="bar" style="height: 40%"></div>
+                            <div class="bar" style="height: 60%"></div>
+                            <div class="bar" style="height: 80%"></div>
+                            <div class="bar" style="height: 100%"></div>
+                            <div class="bar" style="height: 50%"></div>
+                        </div>
+                        <div class="chart-labels"><span>0</span><span>3</span><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bottom-nav">
+        <button class="footer-btn" id="footer-cart-btn"><i class="fas fa-shopping-cart"></i> Ver Carrito <span id="cart-count" class="cart-count">0</span></button>
+    </footer>
+
+    <!-- Firebase (compat) - contadores de pedidos -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script>
+        // intenta leer y mostrar contadores de "pedidos" desde Firestore
+        async function getCountByField(field, value){
+            try {
+                const db = firebase.firestore();
+                const q = await db.collection('pedidos').where(field, '==', value).get();
+                return q.size || 0;
+            } catch(e){
+                console.warn('Consulta fallida', field, value, e);
+                return 0;
+            }
+        }
+        async function updateOrderCounts(){
+            if (!(window.firebase && firebase.firestore)) return;
+            // primeros intentos con campo 'status'
+            let pending = await getCountByField('status','pendiente');
+            let sent = await getCountByField('status','enviado');
+            // fallback a 'estado'
+            if (pending === 0 && sent === 0){
+                const p2 = await getCountByField('estado','pendiente');
+                const s2 = await getCountByField('estado','enviado');
+                if (p2 > 0) pending = p2;
+                if (s2 > 0) sent = s2;
+            }
+            // actualizar badges pequeños si existen
+            const elP = document.getElementById('pending-count');
+            const elS = document.getElementById('sent-count');
+            if (elP) elP.innerText = pending;
+            if (elS) elS.innerText = sent;
+            // actualizar tarjetas grandes
+            const elPbig = document.getElementById('pending-count-large');
+            const elSbig = document.getElementById('sent-count-large');
+            if (elPbig) elPbig.innerText = pending;
+            if (elSbig) elSbig.innerText = sent;
+            // accesibilidad: añadir title con detalle
+            const pc = document.getElementById('pending-card');
+            const sc = document.getElementById('sent-card');
+            if (pc) pc.setAttribute('title', `${pending} pedidos pendientes`);
+            if (sc) sc.setAttribute('title', `${sent} pedidos enviados`);
+        }
+        document.addEventListener('DOMContentLoaded', ()=>{
+            if (window.firebase && firebase.firestore) {
+                updateOrderCounts();
+                setInterval(updateOrderCounts, 10000);
+            } else {
+                console.warn('Firebase no disponible: contar pedidos deshabilitado.');
+            }
+        });
+    </script>
+    <script src="seed-firestore.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Mostrar panel admin si la URL contiene ?admin=1
+        (function(){
+            try {
+                const params = new URLSearchParams(location.search);
+                if (params.get('admin') === '1') {
+                    const panel = document.getElementById('admin-seed-panel');
+                    if (panel) panel.style.display = 'block';
+                }
+            } catch ( e ) { /* ignore */ }
+        })();
+    </script>
+    <!-- Modal del Carrito y Pagos -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ver Carrito y Pagos</h3>
+                <span class="close-modal" onclick="closeCart()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Columna Izquierda: Envío y Productos -->
+                <div class="col-left">
+                    <section class="checkout-section">
+                        <h4>Datos de Envío</h4>
+                        <div class="form-grid">
+                            <input type="text" id="cliente-name" placeholder="Nombre del cliente" class="full-width">
+                            <input type="email" id="cliente-email" placeholder="Email (opcional)" class="full-width">
+                            <input type="text" id="direccion" placeholder="Dirección" class="full-width">
+                            <input type="text" id="ciudad" placeholder="Ciudad">
+                            <input type="text" id="codigo-postal" placeholder="Código Postal">
+                            <input type="text" id="estado-codigo" placeholder="Estado/Código">
+                            <input type="text" id="telefono" placeholder="Teléfono">
+                        </div>
+                    </section>
+
+                    <section class="checkout-section">
+                        <h4>Lista de Productos</h4>
+                        <div id="cart-items-list">
+                            <!-- Los productos seleccionados serán renderizados aquí por script.js -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Columna Derecha: Pagos y Totales -->
+                <div class="col-right">
+                    <section class="checkout-section">
+                        <h4>Opciones de Pago</h4>
+                        <div class="payment-methods">
+                            <label class="pay-option"><input type="radio" name="pay" value="PayPal"> <i class="fab fa-paypal"></i> PayPal</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Mercado Pago"> <i class="fas fa-handshake"></i> Mercado Pago</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Tarjeta"> <i class="fas fa-credit-card"></i> Tarjeta Crédito/Débito</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Transferencia"> <i class="fas fa-university"></i> Transferencia</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Efectivo"> <i class="fas fa-money-bill-wave"></i> Efectivo</label>
+                        </div>
+                    </section>
+
+                    <section class="checkout-section calculator">
+                        <h4>Calculadora de Impuestos</h4>
+                        <div class="summary-line"><span>Subtotal:</span> <span id="subtotal">$165.40</span></div>
+                        <div class="summary-line"><span>IVA (16%):</span> <span id="tax">$15.00</span></div>
+                        <div class="summary-line total"><span>Total a Pagar:</span> <span id="total-final">$234.29</span></div>
+                        <button id="confirm-purchase-btn" class="confirm-btn" onclick="confirmPurchase()" disabled>Confirmar Compra</button>
+                    </section>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <h4>Confirmación de Compra</h4>
+                <p>Resumen de compra: Al confirmar la compra usted acepta el procesamiento de su pedido y el envío de los productos seleccionados.</p>
+                <label><input type="checkbox" id="terms-checkbox"> Acepto los términos e información de privacidad.</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="admin-modal" class="modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+            <div class="modal-header">
+                <h3 id="admin-modal-title" style="margin:0;font-size:16px;">Acceso Administrador</h3>
+                <button class="close-modal" onclick="closeAdminModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="login-form">
+                    <input id="admin-username" placeholder="Usuario" autocomplete="username">
+                    <input id="admin-password" type="password" placeholder="Contraseña" autocomplete="current-password">
+                    <div id="admin-login-message"></div>
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button class="admin-btn" onclick="adminLogin()">Ingresar</button>
+                        <button class="admin-btn" onclick="closeAdminModal()">Cancelar</button>
+                    </div>
+                </div>
+                <div id="admin-panel" style="display:none;margin-top:12px;"></div>
+            </div>
+            <div class="modal-footer">
+                <small>Credenciales por defecto: <strong>admin</strong> / <strong>Lupita123</strong></small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sesión de administrador con expiración y cierre completo.
+        const SESSION_TTL_MS = 15 * 60 * 1000; // 15 minutos
+        function setAdminSession(user){
+            const expiresAt = Date.now() + SESSION_TTL_MS;
+            localStorage.setItem('adminLoggedIn','1');
+            localStorage.setItem('adminName', user);
+            localStorage.setItem('adminExpiresAt', String(expiresAt));
+            updateAdminUI();
+        }
+        function clearAdminSession(){
+            localStorage.removeItem('adminLoggedIn');
+            localStorage.removeItem('adminName');
+            localStorage.removeItem('adminExpiresAt');
+        }
+        function signOutAdmin(){
+            clearAdminSession();
+            updateAdminUI();
+            // redirigir al login para comprobar cierre
+            location.href = 'admin-login.html';
+        }
+        function autoLogoutIfExpired(){
+            const exp = Number(localStorage.getItem('adminExpiresAt') || 0);
+            if (exp && Date.now() > exp){
+                clearAdminSession();
+                updateAdminUI();
+                alert('La sesión ha expirado. Será redirigido al inicio de sesión.');
+                location.href = 'admin-login.html';
+            }
+        }
+        // al interactuar, renovar expiración si está logueado
+        function touchSession(){
+            if (localStorage.getItem('adminLoggedIn') === '1'){
+                localStorage.setItem('adminExpiresAt', String(Date.now() + SESSION_TTL_MS));
+            }
+        }
+        function updateAdminUI(){
+            const logged = localStorage.getItem('adminLoggedIn') === '1';
+            const logoutBtn = document.getElementById('admin-logout-btn');
+            const openBtn = document.getElementById('admin-open-btn');
+            const seedPanel = document.getElementById('admin-seed-panel');
+            if (logged){
+                if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                if (openBtn) openBtn.style.display = 'none';
+                if (seedPanel) seedPanel.style.display = 'block';
+                const panel = document.getElementById('admin-panel');
+                if (panel){
+                    panel.style.display = 'block';
+                    panel.innerHTML = `<div style="padding:8px;border:1px solid #eee;border-radius:6px;"><strong>Administrador:</strong> ${localStorage.getItem('adminName') || 'admin'}</div>`;
+                }
+            } else {
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                if (openBtn) openBtn.style.display = 'inline-block';
+                if (seedPanel){
+                    try {
+                        const params = new URLSearchParams(location.search);
+                        if (params.get('admin') !== '1') seedPanel.style.display = 'none';
+                    } catch (e) { seedPanel.style.display = 'none'; }
+                }
+                const panel = document.getElementById('admin-panel');
+                if (panel) { panel.style.display = 'none'; panel.innerHTML = ''; }
+            }
+        }
+        // listeners para extender sesión mientras haya actividad
+        ['click','mousemove','keydown','touchstart'].forEach(evt=>{
+            window.addEventListener(evt, touchSession, {passive:true});
+        });
+        // chequear expiración periódicamente
+        setInterval(autoLogoutIfExpired, 5000);
+        document.addEventListener('DOMContentLoaded', ()=>{ updateAdminUI(); autoLogoutIfExpired(); });
+    </script>
+</body>
+</html>

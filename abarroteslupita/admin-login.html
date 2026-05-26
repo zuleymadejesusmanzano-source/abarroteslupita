@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Iniciar Sesión | Abarrotes LUPITA</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root{ --accent:#d92b2b; --bg:#f6f7fb; --card:#ffffff; --muted:#6b6b6b; }
+        body{ margin:0; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:linear-gradient(180deg,#fff 0%, #f3f5f8 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; }
+        .login-wrap{ width:100%; max-width:420px; padding:28px; box-sizing:border-box; }
+        .card{ background:var(--card); border-radius:12px; box-shadow:0 10px 30px rgba(20,20,40,0.08); overflow:hidden; }
+        .card-header{ padding:22px 24px; background:linear-gradient(90deg,var(--accent), #ff6b6b); color:#fff; }
+        .brand{ display:flex; gap:12px; align-items:center; }
+        .brand .logo{ width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-weight:700; }
+        .card-body{ padding:20px; }
+        .field{ margin-bottom:12px; }
+        .field input{ width:100%; padding:12px 14px; border-radius:8px; border:1px solid #e6e9ef; box-sizing:border-box; font-size:14px; }
+        .btn{ display:inline-block; background:var(--accent); color:#fff; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; font-weight:600; width:100%; }
+        .secondary{ background:transparent; border:1px solid #e6e9ef; color:#333; margin-top:8px; }
+        .msg{ min-height:20px; margin:10px 0 0; color:#c00; font-size:13px; }
+        .hint{ font-size:13px; color:var(--muted); margin-top:8px; text-align:center; }
+        .small-note{ font-size:12px; color:#777; margin-top:10px; text-align:center; }
+    </style>
+</head>
+<body>
+    <div class="login-wrap">
+        <div class="card" role="main" aria-labelledby="title">
+            <div class="card-header">
+                <div class="brand">
+                    <div class="logo"><i class="fas fa-store" style="font-size:18px;"></i></div>
+                    <div>
+                        <div style="font-weight:700;font-size:16px;">Abarrotes LUPITA</div>
+                        <div style="font-size:13px;opacity:0.9;">Acceso Administrativo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <h2 id="title" style="margin:0 0 14px 0;">Iniciar Sesión</h2>
+                <div class="field"><input id="username" placeholder="Usuario" autocomplete="username"></div>
+                <div class="field"><input id="password" type="password" placeholder="Contraseña" autocomplete="current-password"></div>
+                <div class="msg" id="login-msg"></div>
+                <button class="btn" id="login-btn">Ingresar</button>
+                <button class="btn secondary" onclick="location.href='index.html'">Volver al Panel</button>
+                <p class="hint">Credenciales por defecto: <strong>admin</strong> / <strong>Lupita123</strong></p>
+                <p class="small-note">La sesión expira automáticamente si no hay actividad.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // inicio de sesión en página propia. La sesión se gestiona en localStorage.
+        const ADMIN_USER = 'admin';
+        const ADMIN_PASS = 'Lupita123';
+        const loginBtn = document.getElementById('login-btn');
+        const msg = document.getElementById('login-msg');
+        function setSessionAndRedirect(user){
+            // mismo TTL que index.html
+            const TTL = 15 * 60 * 1000;
+            const expiresAt = Date.now() + TTL;
+            localStorage.setItem('adminLoggedIn','1');
+            localStorage.setItem('adminName', user);
+            localStorage.setItem('adminExpiresAt', String(expiresAt));
+            // redirigir al panel principal
+            location.href = 'index.html';
+        }
+        loginBtn.addEventListener('click', ()=>{
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            if (!u || !p) { msg.style.color='#c00'; msg.innerText = 'Completa usuario y contraseña.'; return; }
+            if (u === ADMIN_USER && p === ADMIN_PASS){
+                msg.style.color='green'; msg.innerText='Acceso autorizado. Redirigiendo...';
+                setTimeout(()=> setSessionAndRedirect(u), 400);
+            } else {
+                msg.style.color='#c00'; msg.innerText='Usuario o contraseña incorrectos.';
+            }
+        });
+        // permitir Enter
+        [document.getElementById('username'), document.getElementById('password')].forEach(el=>{
+            el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') loginBtn.click(); });
+        });
+        // si ya hay sesión activa y no expirada, ir al panel
+        (function(){
+            const exp = Number(localStorage.getItem('adminExpiresAt') || 0);
+            const logged = localStorage.getItem('adminLoggedIn') === '1';
+            if (logged && exp && Date.now() < exp){
+                location.href = 'index.html';
+            } else {
+                // limpiar sesiones antiguas
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('adminName');
+                localStorage.removeItem('adminExpiresAt');
+            }
+        })();
+    </script>
+</body>
+</html>
