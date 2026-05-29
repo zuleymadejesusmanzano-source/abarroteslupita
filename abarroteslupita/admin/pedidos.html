@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Abarrotes LUPITA - Pedidos</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -23,7 +23,7 @@
             <button class="nav-btn" onclick="location.href='reportes.html'">Reportes</button>
         </nav>
         <div class="user-welcome">
-            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+            <button class="welcome-btn" onclick="location.href='../Clientes/bienvenida.html'">Bienvenida</button>
         </div>
     </header>
 
@@ -33,7 +33,7 @@
             
             <!-- Botones de Acción Superiores -->
             <div class="top-actions">
-                <button class="btn-action-red" onclick="location.href='tienda.html'"><i class="fas fa-shopping-cart"></i> Nuevo Pedido</button>
+                <button class="btn-action-red" onclick="location.href='../Clientes/tienda.html'"><i class="fas fa-shopping-cart"></i> Nuevo Pedido</button>
                 <button class="btn-action-dark" onclick="location.href='index.html'"><i class="fas fa-times-circle"></i> Cancelar Pedido</button>
             </div>
 
@@ -97,22 +97,11 @@
                 <!-- Columna de Estadísticas (Sidebar) -->
                 <aside class="stats-sidebar">
                     <h3>Pedidos del Día</h3>
-                    <div class="stat-item"><span>Pedidos Totales</span> <strong>35</strong></div>
-                    <div class="stat-item"><span>Ventas Totales ($)</span> <strong>$5</strong></div>
-                    <div class="stat-item"><span>Total ($)</span> <strong>60</strong></div>
+                    <div class="stat-item"><span>Pedidos Totales</span> <strong id="pedidos-totales">0</strong></div>
+                    <div class="stat-item"><span>Ventas Totales ($)</span> <strong id="ventas-totales">$0.00</strong></div>
+                    <div class="stat-item"><span>Total ($)</span> <strong id="total-dia">$0.00</strong></div>
                     
-                    <div class="chart-container">
-                        <p>Pedidos por hora</p>
-                        <div class="bar-chart">
-                            <div class="bar" style="height: 20%"></div>
-                            <div class="bar" style="height: 40%"></div>
-                            <div class="bar" style="height: 60%"></div>
-                            <div class="bar" style="height: 80%"></div>
-                            <div class="bar" style="height: 100%"></div>
-                            <div class="bar" style="height: 50%"></div>
-                        </div>
-                        <div class="chart-labels"><span>0</span><span>3</span><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span></div>
-                    </div>
+                    <!-- Gráfica eliminada por petición del usuario -->
                 </aside>
             </div>
         </div>
@@ -185,8 +174,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
-    <script src="seed-firestore.js"></script>
-    <script src="script.js"></script>
+    <script src="../firebase-init.js"></script>
+    <script src="../seed-firestore.js"></script>
+    <script src="../script.js"></script>
 </body>
 </html>

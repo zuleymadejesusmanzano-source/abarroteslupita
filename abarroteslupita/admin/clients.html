@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clientes - Abarrotes LUPITA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* minor overrides to keep file self-contained if styles.css missing */
@@ -26,7 +26,7 @@
             <button class="nav-btn" onclick="location.href='reportes.html'">Reportes</button>
         </nav>
         <div class="user-welcome">
-            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+            <button class="welcome-btn" onclick="location.href='../Clientes/bienvenida.html'">Bienvenida</button>
         </div>
     </header>
 
@@ -74,12 +74,39 @@
                 </div>
             </div>
         </aside>
+
+        <div id="client-feedback-modal" class="modal">
+            <div class="modal-content" style="max-width:560px; width:100%;">
+                <div class="modal-header">
+                    <h3>Queja / Sugerencia</h3>
+                    <span class="close-modal" onclick="closeClientFeedbackModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <label>Cliente
+                        <input id="feedback-client-name" type="text" readonly>
+                    </label>
+                    <label>Contacto
+                        <input id="feedback-client-contact" type="text" readonly>
+                    </label>
+                    <label>ID de Pedido (opcional)
+                        <input id="feedback-order-id" type="text" placeholder="PED-...">
+                    </label>
+                    <label>Mensaje / Descripción
+                        <textarea id="feedback-message" rows="5" placeholder="Describe tu queja o sugerencia"></textarea>
+                    </label>
+                </div>
+                <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:12px;">
+                    <button class="btn-action btn-dark" onclick="closeClientFeedbackModal()">Cancelar</button>
+                    <button class="btn-action btn-red-gradient" onclick="submitClientFeedback()">Enviar Reporte</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
-    <script src="seed-firestore.js"></script>
-    <script src="script.js"></script>
+    <script src="../firebase-init.js"></script>
+    <script src="../seed-firestore.js"></script>
+    <script src="../script.js"></script>
 </body>
 </html>

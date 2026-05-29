@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Abarrotes LUPITA - Punto de Venta</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Estilos mínimos para modal de admin y botones */
@@ -86,36 +86,18 @@
         </div>
         <nav class="nav-menu" aria-label="Navegación principal">
             <button class="nav-btn active" onclick="location.href='index.html'">Inicio</button>
-
-            <button id="pedidos-pendientes-btn" class="nav-btn" onclick="location.href='pedidos.html?filter=pendiente'">
-                Pedidos
-            </button>
-
-            <button class="nav-btn" onclick="location.href='clients.html'">Clientes</button>
-
-            <button class="nav-btn" onclick="location.href='reportes.html'">Reportes</button>
+            <button class="nav-btn" onclick="location.href='../Clientes/'">Tienda</button>
         </nav>
 
         <div class="user-welcome">
+            <button id="admin-login-btn" class="welcome-pill admin-btn" title="Iniciar sesión administrador" onclick="location.href='../admin/admin-login.html'">Administrador</button>
             <button id="welcome-pill" class="welcome-pill" title="Bienvenida" onclick="location.href='bienvenida.html'">Bienvenida</button>
         </div>
     </header>
 
-    <!-- Admin seeding panel (visible only with ?admin=1) -->
-    <div id="admin-seed-panel" style="display:none; position:fixed; right:12px; top:80px; background:#fff; border:2px solid #d31d1d; padding:10px; border-radius:8px; z-index:1500; box-shadow:0 4px 12px rgba(0,0,0,0.12);">
-        <strong style="color:#a31616;display:block;margin-bottom:8px;">Admin - Datos de Prueba</strong>
-        <div style="display:flex;flex-direction:column;gap:8px;min-width:200px;">
-            <button onclick="seedProductosToFirestore()" style="padding:8px;border-radius:6px;background:#f02d2d;color:#fff;border:none;cursor:pointer;">Cargar Productos</button>
-            <button onclick="seedPedidosToFirestore()" style="padding:8px;border-radius:6px;background:#444;color:#fff;border:none;cursor:pointer;">Cargar Pedidos</button>
-            <button onclick="seedAllData()" style="padding:8px;border-radius:6px;background:#0066cc;color:#fff;border:none;cursor:pointer;">Cargar Todo</button>
-            <button onclick="clearPedidos()" style="padding:8px;border-radius:6px;background:#999;color:#fff;border:none;cursor:pointer;">Eliminar Pedidos</button>
-            <button onclick="this.parentElement.parentElement.style.display='none'" style="padding:6px;border-radius:6px;background:transparent;border:1px solid #ccc;cursor:pointer;">Cerrar</button>
-        </div>
-    </div>
-
     <!-- Estado: Tarjetas grandes para Pedidos -->
     <!-- <section class="status-cards" aria-label="Estado de pedidos">
-        <div id="pending-card" class="status-card-large" role="button" tabindex="0" onclick="location.href='pedidos.html?filter=pendiente'">
+        <div id="pending-card" class="status-card-large" role="button" tabindex="0" onclick="location.href='../admin/pedidos.html?filter=pendiente'">
             <div class="icon" aria-hidden="true"><i class="fas fa-store-alt"></i></div>
             <div class="meta">
                 <div class="title">Pedidos Pendientes</div>
@@ -123,7 +105,7 @@
             </div>
         </div>
 
-        <div id="sent-card" class="status-card-large" role="button" tabindex="0" onclick="location.href='pedidos.html?filter=enviado'">
+        <div id="sent-card" class="status-card-large" role="button" tabindex="0" onclick="location.href='../admin/pedidos.html?filter=enviado'">
             <div class="icon" aria-hidden="true"><i class="fas fa-shipping-fast"></i></div>
             <div class="meta">
                 <div class="title">Pedidos Enviados</div>
@@ -137,10 +119,10 @@
         <button class="btn-action btn-red-gradient" onclick="location.href='nuevo-pedido.html'">
             <i class="fas fa-shopping-cart"></i> Nuevo Pedido
         </button>
-        <button class="btn-action btn-dark" onclick="location.href='pedidos.html'">
+        <button class="btn-action btn-dark" onclick="location.href='../admin/pedidos.html'">
             <i class="fas fa-list"></i> Ver todos los pedidos
         </button>
-        <button class="btn-action" onclick="location.href='carritos.html'">
+        <button class="btn-action" onclick="location.href='../admin/carritos.html'">
             <i class="fas fa-file-alt"></i> Reportes
         </button>
     </section -->
@@ -308,7 +290,7 @@
     <!-- Firebase (compat) - contadores de pedidos -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
+    <script src="../firebase-init.js"></script>
     <script>
         // intenta leer y mostrar contadores de "pedidos" desde Firestore
         async function getCountByField(field, value){
@@ -358,20 +340,8 @@
             }
         });
     </script>
-    <script src="seed-firestore.js"></script>
-    <script src="script.js"></script>
-    <script>
-        // Mostrar panel admin si la URL contiene ?admin=1
-        (function(){
-            try {
-                const params = new URLSearchParams(location.search);
-                if (params.get('admin') === '1') {
-                    const panel = document.getElementById('admin-seed-panel');
-                    if (panel) panel.style.display = 'block';
-                }
-            } catch ( e ) { /* ignore */ }
-        })();
-    </script>
+    <script src="../seed-firestore.js"></script>
+    <script src="../script.js"></script>
     <!-- Modal del Carrito y Pagos -->
     <div id="cart-modal" class="modal">
         <div class="modal-content">
@@ -436,100 +406,5 @@
     </div>
 
     <!-- ADMIN LOGIN MODAL -->
-    <div id="admin-modal" class="modal" aria-hidden="true">
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
-            <div class="modal-header">
-                <h3 id="admin-modal-title" style="margin:0;font-size:16px;">Acceso Administrador</h3>
-                <button class="close-modal" onclick="closeAdminModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="login-form">
-                    <input id="admin-username" placeholder="Usuario" autocomplete="username">
-                    <input id="admin-password" type="password" placeholder="Contraseña" autocomplete="current-password">
-                    <div id="admin-login-message"></div>
-                    <div style="display:flex;gap:8px;margin-top:8px;">
-                        <button class="admin-btn" onclick="adminLogin()">Ingresar</button>
-                        <button class="admin-btn" onclick="closeAdminModal()">Cancelar</button>
-                    </div>
-                </div>
-                <div id="admin-panel" style="display:none;margin-top:12px;"></div>
-            </div>
-            <div class="modal-footer">
-                <small>Credenciales por defecto: <strong>admin</strong> / <strong>Lupita123</strong></small>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Sesión de administrador con expiración y cierre completo.
-        const SESSION_TTL_MS = 15 * 60 * 1000; // 15 minutos
-        function setAdminSession(user){
-            const expiresAt = Date.now() + SESSION_TTL_MS;
-            localStorage.setItem('adminLoggedIn','1');
-            localStorage.setItem('adminName', user);
-            localStorage.setItem('adminExpiresAt', String(expiresAt));
-            updateAdminUI();
-        }
-        function clearAdminSession(){
-            localStorage.removeItem('adminLoggedIn');
-            localStorage.removeItem('adminName');
-            localStorage.removeItem('adminExpiresAt');
-        }
-        function signOutAdmin(){
-            clearAdminSession();
-            updateAdminUI();
-            // redirigir al login para comprobar cierre
-            location.href = 'admin-login.html';
-        }
-        function autoLogoutIfExpired(){
-            const exp = Number(localStorage.getItem('adminExpiresAt') || 0);
-            if (exp && Date.now() > exp){
-                clearAdminSession();
-                updateAdminUI();
-                alert('La sesión ha expirado. Será redirigido al inicio de sesión.');
-                location.href = 'admin-login.html';
-            }
-        }
-        // al interactuar, renovar expiración si está logueado
-        function touchSession(){
-            if (localStorage.getItem('adminLoggedIn') === '1'){
-                localStorage.setItem('adminExpiresAt', String(Date.now() + SESSION_TTL_MS));
-            }
-        }
-        function updateAdminUI(){
-            const logged = localStorage.getItem('adminLoggedIn') === '1';
-            const logoutBtn = document.getElementById('admin-logout-btn');
-            const openBtn = document.getElementById('admin-open-btn');
-            const seedPanel = document.getElementById('admin-seed-panel');
-            if (logged){
-                if (logoutBtn) logoutBtn.style.display = 'inline-block';
-                if (openBtn) openBtn.style.display = 'none';
-                if (seedPanel) seedPanel.style.display = 'block';
-                const panel = document.getElementById('admin-panel');
-                if (panel){
-                    panel.style.display = 'block';
-                    panel.innerHTML = `<div style="padding:8px;border:1px solid #eee;border-radius:6px;"><strong>Administrador:</strong> ${localStorage.getItem('adminName') || 'admin'}</div>`;
-                }
-            } else {
-                if (logoutBtn) logoutBtn.style.display = 'none';
-                if (openBtn) openBtn.style.display = 'inline-block';
-                if (seedPanel){
-                    try {
-                        const params = new URLSearchParams(location.search);
-                        if (params.get('admin') !== '1') seedPanel.style.display = 'none';
-                    } catch (e) { seedPanel.style.display = 'none'; }
-                }
-                const panel = document.getElementById('admin-panel');
-                if (panel) { panel.style.display = 'none'; panel.innerHTML = ''; }
-            }
-        }
-        // listeners para extender sesión mientras haya actividad
-        ['click','mousemove','keydown','touchstart'].forEach(evt=>{
-            window.addEventListener(evt, touchSession, {passive:true});
-        });
-        // chequear expiración periódicamente
-        setInterval(autoLogoutIfExpired, 5000);
-        document.addEventListener('DOMContentLoaded', ()=>{ updateAdminUI(); autoLogoutIfExpired(); });
-    </script>
 </body>
 </html>

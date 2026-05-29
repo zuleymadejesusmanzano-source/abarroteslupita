@@ -83,6 +83,15 @@ function isIndexCatalogPage() {
     return page === '' || page === 'index.html' || page === 'index';
 }
 
+function getAssetPath(relativePath) {
+    const currentPath = window.location.pathname;
+    const folder = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    if (folder && folder !== '/') {
+        return `../${relativePath}`;
+    }
+    return relativePath;
+}
+
 let currentProductEditKey = null;
 
 function openEditProductModal(productKey) {
@@ -176,9 +185,14 @@ async function loadOrdersFromFirestore() {
         const snapshot = await db.collection('pedidos').orderBy('createdAt', 'desc').get();
         return snapshot.docs.map(doc => {
             const data = doc.data();
+            // normalize status/estado values to capitalized form
+            let rawStatus = data.status || data.estado || 'Pendiente';
+            rawStatus = String(rawStatus || '').trim();
+            const normalizedStatus = rawStatus.length ? (rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase()) : 'Pendiente';
             return {
                 id: doc.id,
                 ...data,
+                status: normalizedStatus,
                 createdAt: data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt || new Date().toISOString(),
                 createdAtReadable: data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString() : data.createdAtReadable || new Date().toLocaleString()
             };
@@ -285,13 +299,13 @@ function renderProductos() {
     const paginados = filtrados.slice(inicio, fin);
 
     paginados.forEach((p, idx) => {
-        const imgSrc = `img/${p.img || 'placeholder.png'}`;
+        const imgSrc = getAssetPath(`img/${p.img || 'placeholder.png'}`);
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
             <div class="size-label" style="font-size:0.9rem">${p.nombre}</div>
             <div class="img-placeholder">
-                <img src="${imgSrc}" alt="${p.nombre}" onerror="this.src='img/placeholder.png'">
+                <img src="${imgSrc}" alt="${p.nombre}" onerror="this.src='${getAssetPath('img/placeholder.png')}'">
             </div>
             <div style="padding:0 12px 12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
                 <div>
@@ -365,11 +379,11 @@ function renderCart() {
     }
 
     (window.cart || []).forEach((item, idx) => {
-        const imgSrc = `img/${item.img || 'placeholder.png'}`;
+        const imgSrc = getAssetPath(`img/${item.img || 'placeholder.png'}`);
         const div = document.createElement('div');
         div.className = 'cart-item';
         div.innerHTML = `
-            <img src="${imgSrc}" alt="${item.nombre}" onerror="this.src='img/placeholder.png'">
+            <img src="${imgSrc}" alt="${item.nombre}" onerror="this.src='${getAssetPath('img/placeholder.png')}'">
             <div class="item-details">
                 <span>${item.nombre}</span>
                 <small>Precio: $${item.price.toFixed(2)}</small>
@@ -771,6 +785,7 @@ const ORDERS_KEY = 'lupita_orders_v1';
 const CARTS_KEY = 'lupita_carts_v1';
 const CURRENT_CART_KEY = 'lupita_current_cart_v1';
 const REPORTS_KEY = 'lupita_reports_v1';
+const CASH_CUTS_KEY = 'lupita_cash_cuts_v1';
 
 function loadReports() {
     try { const raw = localStorage.getItem(REPORTS_KEY); return raw ? JSON.parse(raw) : []; } catch(e){ console.error('Error loading reports', e); return []; }
@@ -778,6 +793,94 @@ function loadReports() {
 
 function saveReports(reports) {
     try { localStorage.setItem(REPORTS_KEY, JSON.stringify(reports)); } catch(e){ console.error('Error saving reports', e); }
+}
+
+function loadCashCuts() {
+    try { const raw = localStorage.getItem(CASH_CUTS_KEY); return raw ? JSON.parse(raw) : []; } catch(e){ console.error('Error loading cash cuts', e); return []; }
+}
+
+function saveCashCuts(cuts) {
+    try { localStorage.setItem(CASH_CUTS_KEY, JSON.stringify(cuts)); } catch(e){ console.error('Error saving cash cuts', e); }
+}
+
+function createCashCutRecord(dateValue) {
+    const orders = loadOrders();
+    const selected = new Date(dateValue);
+    if (isNaN(selected.getTime())) return null;
+    const dayKey = selected.toISOString().slice(0, 10);
+    const filteredOrders = orders.filter(o => {
+        try { return new Date(o.createdAt).toISOString().slice(0, 10) === dayKey; } catch(e){ return false; }
+    });
+    const count = filteredOrders.length;
+    const total = filteredOrders.reduce((sum,o) => sum + (Number(o.total) || 0), 0);
+    const subtotalTotal = filteredOrders.reduce((sum,o) => sum + (Number(o.subtotal) || 0), 0);
+    const taxTotal = filteredOrders.reduce((sum,o) => sum + (Number(o.tax) || 0), 0);
+    return {
+        id: 'CT-' + dayKey.replace(/-/g,'') + '-' + Date.now().toString().slice(-5),
+        date: dayKey,
+        createdAt: new Date().toISOString(),
+        orderCount: count,
+        total: total,
+        subtotalTotal: subtotalTotal,
+        taxTotal: taxTotal,
+        orderIds: filteredOrders.map(o => o.id || null).filter(Boolean)
+    };
+}
+
+function renderCashCuts() {
+    const tbody = document.getElementById('cash-cuts-tbody');
+    const summaryEl = document.getElementById('cash-cut-summary');
+    if (summaryEl) {
+        const dateInput = document.getElementById('cash-cut-date');
+        const dateValue = dateInput ? dateInput.value : (new Date().toISOString().slice(0, 10));
+        const preview = createCashCutRecord(dateValue);
+        if (preview) {
+            summaryEl.innerHTML = `
+                <div class="stat-item"><span>Pedidos en el día</span> <strong>${preview.orderCount}</strong></div>
+                <div class="stat-item"><span>Total Ventas ($)</span> <strong>$${preview.total.toFixed(2)}</strong></div>
+                <div class="stat-item"><span>Subtotal ($)</span> <strong>$${preview.subtotalTotal.toFixed(2)}</strong></div>
+                <div class="stat-item"><span>IVA ($)</span> <strong>$${preview.taxTotal.toFixed(2)}</strong></div>
+            `;
+        } else {
+            summaryEl.innerHTML = '<div style="color:#666;">Selecciona una fecha válida para ver el corte previo.</div>';
+        }
+    }
+    if (!tbody) return;
+    const cuts = loadCashCuts();
+    tbody.innerHTML = '';
+    cuts.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+    cuts.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.date}</td>
+            <td>${c.orderCount}</td>
+            <td><strong>$${(c.total || 0).toFixed(2)}</strong></td>
+            <td>${new Date(c.createdAt).toLocaleString()}</td>
+            <td><button class="btn-table btn-download-cut" data-id="${c.id}">Ver</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.btn-download-cut').forEach(b => b.addEventListener('click', (e) => showCashCutDetails(e.currentTarget.getAttribute('data-id'))));
+}
+
+function createCashCut() {
+    const dateInput = document.getElementById('cash-cut-date');
+    const dateValue = dateInput ? dateInput.value : null;
+    if (!dateValue) return alert('Selecciona la fecha del corte.');
+    const cut = createCashCutRecord(dateValue);
+    if (!cut) return alert('La fecha del corte no es válida.');
+    const cuts = loadCashCuts();
+    cuts.unshift(cut);
+    saveCashCuts(cuts);
+    renderCashCuts();
+    alert(`Corte de caja guardado para ${cut.date} con ${cut.orderCount} pedidos y $${cut.total.toFixed(2)}.`);
+}
+
+function showCashCutDetails(cutId) {
+    const cuts = loadCashCuts();
+    const cut = cuts.find(x=>x.id===cutId);
+    if (!cut) return alert('Corte no encontrado.');
+    alert(`Corte de Caja ${cut.id}\nFecha: ${cut.date}\nPedidos: ${cut.orderCount}\nTotal: $${cut.total.toFixed(2)}\nSubtotal: $${cut.subtotalTotal.toFixed(2)}\nIVA: $${cut.taxTotal.toFixed(2)}\nGenerado: ${new Date(cut.createdAt).toLocaleString()}`);
 }
 
 function submitClientReport(report) {
@@ -791,7 +894,7 @@ function submitClientReport(report) {
             try { db.collection('reports').doc(report.id).set(report); } catch(e){ console.warn('Error saving report to firestore', e); }
         }
         // update admin reports view if visible
-        if (document.querySelector('.reports-page')) renderClientReports();
+        if (document.querySelector('.reports-page')) renderReports();
         return true;
     } catch (e) { console.error('submitClientReport', e); return false; }
 }
@@ -896,9 +999,35 @@ function saveOrders(orders) {
     try {
         localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
         if (document.querySelector('.reports-page')) renderReports();
+        // update pedidos del día counters if pedidos page visible
+        try { updatePedidosDayStats(); } catch (e) { /* ignore */ }
     } catch (e) {
         console.error('Error saving orders', e);
     }
+}
+
+function updatePedidosDayStats() {
+    // only update when pedidos section exists
+    if (!document.getElementById('section-pedidos')) return;
+    const pedidosTotalesEl = document.getElementById('pedidos-totales');
+    const ventasTotalesEl = document.getElementById('ventas-totales');
+    const totalDiaEl = document.getElementById('total-dia');
+    if (!pedidosTotalesEl && !ventasTotalesEl && !totalDiaEl) return;
+
+    const orders = loadOrders();
+    const today = new Date().toLocaleDateString();
+    const todays = orders.filter(o => {
+        try { return new Date(o.createdAt).toLocaleDateString() === today; }
+        catch (e) { return false; }
+    });
+
+    const count = todays.length;
+    const ventas = todays.reduce((s,o) => s + (Number(o.total) || 0), 0);
+    const subtotalSum = todays.reduce((s,o) => s + (Number(o.subtotal) || 0), 0);
+
+    if (pedidosTotalesEl) pedidosTotalesEl.innerText = count;
+    if (ventasTotalesEl) ventasTotalesEl.innerText = `$${ventas.toFixed(2)}`;
+    if (totalDiaEl) totalDiaEl.innerText = `$${subtotalSum.toFixed(2)}`;
 }
 
 function updateReportsIfVisible() {
@@ -1231,6 +1360,46 @@ function addOrderFromCart(paymentMethodOverride) {
     return order;
 }
 
+/* ------------------ Admin UI Helpers ------------------ */
+function checkAdminSessionUI() {
+    try {
+        const exp = Number(localStorage.getItem('adminExpiresAt') || 0);
+        const logged = localStorage.getItem('adminLoggedIn') === '1' && exp && Date.now() < exp;
+        const adminBtn = document.getElementById('admin-toggle-btn');
+        const adminLogout = document.getElementById('admin-logout-btn');
+        const adminLogin = document.getElementById('admin-login-btn');
+        const adminPanel = document.getElementById('admin-seed-panel');
+        if (adminBtn) adminBtn.style.display = logged ? 'inline-block' : 'none';
+        if (adminLogout) adminLogout.style.display = logged ? 'inline-block' : 'none';
+        if (adminLogin) adminLogin.style.display = logged ? 'none' : 'inline-block';
+        if (adminPanel) {
+            if (logged) adminPanel.style.display = 'block';
+            else {
+                const params = new URLSearchParams(location.search);
+                adminPanel.style.display = params.get('admin') === '1' ? 'block' : 'none';
+            }
+        }
+    } catch (e) { console.warn('checkAdminSessionUI', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkAdminSessionUI();
+    setInterval(checkAdminSessionUI, 5000);
+    const adminBtn = document.getElementById('admin-toggle-btn');
+    if (adminBtn) adminBtn.addEventListener('click', () => {
+        const p = document.getElementById('admin-seed-panel');
+        if (p) p.style.display = (p.style.display === 'block' ? 'none' : 'block');
+    });
+    const adminLogout = document.getElementById('admin-logout-btn');
+    if (adminLogout) adminLogout.addEventListener('click', () => {
+        localStorage.removeItem('adminLoggedIn');
+        localStorage.removeItem('adminName');
+        localStorage.removeItem('adminExpiresAt');
+        const p = document.getElementById('admin-seed-panel'); if (p) p.style.display = 'none';
+        checkAdminSessionUI();
+    });
+});
+
 function renderReports() {
     const kpi = computeKPIs();
 
@@ -1315,6 +1484,7 @@ function renderReports() {
     }
     // render client-submitted reports table
     renderClientReports();
+    renderCashCuts();
 }
 
 function renderClientReports() {
@@ -1323,22 +1493,84 @@ function renderClientReports() {
     const reports = loadReports();
     tbody.innerHTML = '';
     reports.forEach(r => {
+        const responseText = r.response ? (r.response.message || '').replace(/\n/g,' ') : '—';
+        const responseBy = r.response ? `<div style="font-size:0.8rem;color:#555;margin-top:4px;">(${r.response.responder || 'Admin'})</div>` : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${r.id}</td>
             <td>${r.orderId || '—'}</td>
             <td>${r.cliente || '—'}</td>
             <td>${r.telefono || r.email || '—'}</td>
-            <td>${(r.message || '').replace(/\n/g,' ')} </td>
+            <td>${(r.message || '').replace(/\n/g,' ')}</td>
+            <td>${responseText}${responseBy}</td>
             <td>${new Date(r.createdAt).toLocaleString()}</td>
+            <td><button class="btn-table btn-respond-report" data-id="${r.id}">Responder</button></td>
         `;
         tbody.appendChild(tr);
     });
+    tbody.querySelectorAll('.btn-respond-report').forEach(b => b.addEventListener('click', e => openReportResponseModal(e.currentTarget.getAttribute('data-id'))));
+}
+
+function openReportResponseModal(reportId) {
+    const report = loadReports().find(r=>r.id===reportId);
+    if (!report) return alert('Reporte no encontrado.');
+    const modal = document.getElementById('report-response-modal');
+    if (!modal) return;
+    document.getElementById('response-report-id').value = report.id;
+    document.getElementById('response-order-id').value = report.orderId || '';
+    document.getElementById('response-client-name').value = report.cliente || '';
+    document.getElementById('response-client-contact').value = report.telefono || report.email || '';
+    document.getElementById('response-original-message').value = report.message || '';
+    document.getElementById('response-admin-message').value = report.response ? report.response.message || '' : '';
+    modal.dataset.reportId = reportId;
+    modal.classList.add('open');
+}
+
+function closeReportResponseModal() {
+    const modal = document.getElementById('report-response-modal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.dataset.reportId = '';
+}
+
+function prefillReportResponseTemplate() {
+    const textarea = document.getElementById('response-admin-message');
+    if (!textarea) return;
+    textarea.value = 'Gracias por su observación, trabajaremos en eso.';
+}
+
+function submitReportResponse() {
+    const modal = document.getElementById('report-response-modal');
+    if (!modal) return;
+    const reportId = modal.dataset.reportId;
+    const message = document.getElementById('response-admin-message').value.trim();
+    if (!reportId) return alert('Reporte no seleccionado.');
+    if (!message) return alert('Escribe la respuesta antes de guardar.');
+    const reports = loadReports();
+    const report = reports.find(r=>r.id===reportId);
+    if (!report) return alert('Reporte no encontrado.');
+    const adminName = localStorage.getItem('adminName') || 'Administrador';
+    report.response = {
+        message,
+        responder: adminName,
+        respondedAt: new Date().toISOString()
+    };
+    saveReports(reports);
+    if (FIRESTORE_ENABLED) {
+        try { db.collection('reports').doc(report.id).set(report); } catch (e) { console.warn('Error guardando respuesta en Firestore', e); }
+    }
+    closeReportResponseModal();
+    renderReports();
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
     if (document.querySelector('.reports-page')) {
         const periodSelect = document.getElementById('reports-period-select');
+        const dateInput = document.getElementById('cash-cut-date');
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().slice(0, 10);
+            dateInput.addEventListener('change', () => renderCashCuts());
+        }
         if (periodSelect) {
             periodSelect.addEventListener('change', ()=> renderReports());
         }
@@ -1346,7 +1578,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
 });
 
-function updateOrderStatus(id, status) {
+async function updateOrderStatus(id, status) {
     const orders = loadOrders();
     const o = orders.find(x=>x.id===id);
     if (!o) return;
@@ -1361,6 +1593,14 @@ function updateOrderStatus(id, status) {
         o.canceledAt = new Date().toISOString();
     }
     saveOrders(orders);
+    // persist change to Firestore when enabled
+    if (typeof FIRESTORE_ENABLED !== 'undefined' && FIRESTORE_ENABLED) {
+        try {
+            await saveOrderToFirestore(o);
+        } catch (e) {
+            console.warn('Error guardando estado de pedido en Firestore', e);
+        }
+    }
     // Re-render using the current filter; keep order where it is (Enviado stays Enviado)
     renderOrders(currentOrderFilter);
 }
@@ -1389,6 +1629,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
         // mostrar todos al cargar pedidos.html
         renderOrders('Pendientes');
+        try { updatePedidosDayStats(); } catch(e) { /* ignore */ }
     }
 });
 
@@ -1543,6 +1784,16 @@ function addClientFromOrder(clientData, order) {
         clients.unshift(newClient);
     }
     saveClients(clients);
+    // If the clients UI is visible, refresh it so the new client appears immediately
+    try {
+        if (document.getElementById('clients-grid')) {
+            const activeFilterBtn = document.querySelector('.clients-top .filter-btn.active') || document.querySelector('.quick-filters .filter-btn.active');
+            const filter = activeFilterBtn ? activeFilterBtn.getAttribute('data-filter') : 'all';
+            const qEl = document.getElementById('clients-search');
+            const q = qEl ? qEl.value : '';
+            renderClients(filter, q);
+        }
+    } catch (e) { /* ignore UI errors */ }
 }
 
 function ensureSampleClients() {
@@ -1598,6 +1849,7 @@ function renderClients(filter = 'all', query = '') {
                 <div class="client-balance ${c.balanceDue && c.balanceDue>0 ? 'due' : 'ok'}">${c.balanceDue && c.balanceDue>0 ? '$'+c.balanceDue.toFixed(2) : 'Al corriente'}</div>
                 <div style="font-size:0.85rem; color:#666">Compras: ${c.totalPurchases||0}</div>
                 <div class="client-actions">
+                    <button class="btn-sm btn-feedback" data-id="${c.id}" title="Queja / Sugerencia"><i class="fas fa-comment-dots"></i></button>
                     <button class="btn-sm btn-view-history" data-id="${c.id}"><i class="fas fa-history"></i></button>
                     <button class="btn-sm btn-edit-client" data-id="${c.id}"><i class="fas fa-edit"></i></button>
                     <button class="btn-sm btn-new-sale" data-id="${c.id}"><i class="fas fa-shopping-cart"></i></button>
@@ -1608,6 +1860,9 @@ function renderClients(filter = 'all', query = '') {
     });
 
     // attach actions
+    grid.querySelectorAll('.btn-feedback').forEach(b=>b.addEventListener('click', (e)=>{
+        const id = e.currentTarget.getAttribute('data-id'); openClientFeedbackModal(id);
+    }));
     grid.querySelectorAll('.btn-view-history').forEach(b=>b.addEventListener('click', (e)=>{
         const id = e.currentTarget.getAttribute('data-id'); viewClientHistory(id);
     }));
@@ -1627,6 +1882,12 @@ function viewClientHistory(id) {
     alert(`Historial de ${c.name}:\n\n${purchases || 'Sin compras registradas'}`);
 }
 
+function makeIndexPath() {
+    const path = window.location.pathname.toLowerCase();
+    if (path.includes('/admin/') || path.includes('\\admin\\')) return 'index.html';
+    return 'index.html';
+}
+
 function startNewSaleForClient(id) {
     // Store selected client and redirect to catálogo para crear venta
     const clients = loadClients();
@@ -1634,7 +1895,7 @@ function startNewSaleForClient(id) {
     if (!c) return alert('Cliente no encontrado');
     localStorage.setItem('lupita_selected_client', JSON.stringify({ id: c.id, name: c.name }));
     // redirect to catalog and focus
-    location.href = 'index.html';
+    location.href = makeIndexPath();
 }
 
 function openClientPanel(id) {
@@ -1699,6 +1960,53 @@ function saveClientFromPanel() {
     saveClients(clients);
     renderClients(document.querySelector('.quick-filters .filter-btn.active') ? document.querySelector('.quick-filters .filter-btn.active').getAttribute('data-filter') : 'all', document.getElementById('clients-search').value);
     closeClientPanel();
+}
+
+function openClientFeedbackModal(clientId) {
+    const c = loadClients().find(x=>x.id===clientId);
+    if (!c) return alert('Cliente no encontrado');
+    const modal = document.getElementById('client-feedback-modal');
+    if (!modal) return;
+    document.getElementById('feedback-client-name').value = c.name || '';
+    document.getElementById('feedback-client-contact').value = c.phone || c.email || '';
+    document.getElementById('feedback-order-id').value = '';
+    document.getElementById('feedback-message').value = '';
+    modal.classList.add('open');
+    modal.dataset.clientId = clientId;
+}
+
+function closeClientFeedbackModal() {
+    const modal = document.getElementById('client-feedback-modal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.dataset.clientId = '';
+}
+
+function submitClientFeedback() {
+    const modal = document.getElementById('client-feedback-modal');
+    if (!modal) return;
+    const clientId = modal.dataset.clientId;
+    const client = loadClients().find(x=>x.id===clientId);
+    if (!client) return alert('Cliente no encontrado');
+    const orderId = document.getElementById('feedback-order-id').value.trim();
+    const message = document.getElementById('feedback-message').value.trim();
+    if (!message) return alert('Escribe el contenido de la queja o sugerencia.');
+    const report = {
+        orderId: orderId || null,
+        cliente: client.name,
+        telefono: client.phone || null,
+        email: client.email || null,
+        message,
+        tipo: 'Queja/Sugerencia'
+    };
+    const ok = submitClientReport(report);
+    if (ok) {
+        alert('Queja o sugerencia registrada con éxito.');
+        closeClientFeedbackModal();
+        if (document.querySelector('.reports-page')) renderReports();
+    } else {
+        alert('Error al registrar el reporte. Intenta nuevamente.');
+    }
 }
 
 // Setup clients UI on DOM ready

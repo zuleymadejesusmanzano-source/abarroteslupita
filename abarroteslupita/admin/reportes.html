@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Reportes - Abarrotes LUPITA</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -23,7 +23,7 @@
             <button class="nav-btn active">Reportes</button>
         </nav>
         <div class="user-welcome">
-            <button class="welcome-btn" onclick="location.href='bienvenida.html'">Bienvenida</button>
+            <button class="welcome-btn" onclick="location.href='../Clientes/bienvenida.html'">Bienvenida</button>
         </div>
     </header>
 
@@ -44,7 +44,18 @@
             </div>
         </div>
         <div class="reports-summary" id="reports-summary">
-            <!-- Filled by JS -->
+            <div class="cash-cut-panel">
+                <h3>Corte de Caja Diario</h3>
+                <div class="cash-cut-form" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <label style="display:flex;flex-direction:column;gap:6px;">
+                        Fecha del corte
+                        <input type="date" id="cash-cut-date" />
+                    </label>
+                    <button class="btn-action btn-red-gradient" onclick="createCashCut()">Generar Corte</button>
+                    <button class="btn-action btn-dark" onclick="renderCashCuts()">Actualizar lista</button>
+                </div>
+                <div id="cash-cut-summary" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
+            </div>
         </div>
 
         <!-- Gráficas y tablas -->
@@ -92,20 +103,73 @@
 
         <!-- Reportes enviados por clientes -->
         <div style="margin:20px;">
+            <h3>Cortes de Caja Registrados</h3>
+            <table class="report-table" id="cash-cuts-table">
+                <thead>
+                    <tr><th>Fecha</th><th>Pedidos</th><th>Total ($)</th><th>Creado</th><th>Acción</th></tr>
+                </thead>
+                <tbody id="cash-cuts-tbody"></tbody>
+            </table>
+        </div>
+
+        <div style="margin:20px;">
             <h3>Reportes de Clientes</h3>
             <table class="report-table" id="client-reports-table">
                 <thead>
-                    <tr><th>ID Reporte</th><th>Pedido</th><th>Cliente</th><th>Contacto</th><th>Mensaje</th><th>Fecha</th></tr>
+                    <tr>
+                        <th>ID Reporte</th>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Contacto</th>
+                        <th>Mensaje</th>
+                        <th>Respuesta Admin</th>
+                        <th>Fecha</th>
+                        <th>Acción</th>
+                    </tr>
                 </thead>
                 <tbody id="client-reports-tbody"></tbody>
             </table>
         </div>
     </main>
 
+    <div id="report-response-modal" class="modal">
+        <div class="modal-content" style="max-width:600px; width:100%;">
+            <div class="modal-header">
+                <h3>Responder Reporte</h3>
+                <span class="close-modal" onclick="closeReportResponseModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <label>Reporte ID
+                    <input id="response-report-id" type="text" readonly>
+                </label>
+                <label>Pedido
+                    <input id="response-order-id" type="text" readonly>
+                </label>
+                <label>Cliente
+                    <input id="response-client-name" type="text" readonly>
+                </label>
+                <label>Contacto
+                    <input id="response-client-contact" type="text" readonly>
+                </label>
+                <label>Mensaje original
+                    <textarea id="response-original-message" rows="4" readonly></textarea>
+                </label>
+                <label>Respuesta del administrador
+                    <textarea id="response-admin-message" rows="5" placeholder="Escribe la solución o respuesta aquí..."></textarea>
+                </label>
+            </div>
+            <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:12px;">
+                <button class="btn-action btn-dark" type="button" onclick="prefillReportResponseTemplate()">Respuesta sugerida</button>
+                <button class="btn-action btn-dark" onclick="closeReportResponseModal()">Cancelar</button>
+                <button class="btn-action btn-red-gradient" onclick="submitReportResponse()">Guardar Respuesta</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
-    <script src="seed-firestore.js"></script>
-    <script src="script.js"></script>
+    <script src="../firebase-init.js"></script>
+    <script src="../seed-firestore.js"></script>
+    <script src="../script.js"></script>
 </body>
 </html>
