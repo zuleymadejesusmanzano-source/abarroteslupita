@@ -1,13 +1,162 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=tienda.html">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirigiendo a la Tienda</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tienda - Abarrotes LUPITA</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <p>Redirigiendo a la tienda... Si no carga, haz clic <a href="tienda.html">aquí</a>.</p>
-    <script>window.location.href = 'tienda.html';</script>
+    <header class="main-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="fas fa-store"></i></div>
+            <div class="logo-text">
+                <h1>Abarrotes</h1>
+                <h1 class="brand-name">LUPITA</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="catalog-container">
+        <div class="catalog-header">
+            <div>
+                <h2>Tienda en línea</h2>
+                <p>Explora los productos disponibles y agrega los que necesites al carrito.</p>
+            </div>
+            <div>
+                <button id="open-cart-btn" class="btn-action btn-red-gradient">Ver Carrito <span id="cart-count" class="cart-count">0</span></button>
+                <button id="open-my-orders-btn" class="btn-action" style="margin-left:8px;">Mis Pedidos</button>
+            </div>
+        </div>
+
+        <div class="catalog-header">
+            <div class="category-filters">
+                <button class="filter-btn active" onclick="filterCategory('Todas')">Todas</button>
+                <button class="filter-btn" onclick="filterCategory('Bebidas')">Bebidas</button>
+                <button class="filter-btn" onclick="filterCategory('Abarrotes')">Abarrotes</button>
+                <button class="filter-btn" onclick="filterCategory('Snacks')">Snacks</button>
+                <button class="filter-btn" onclick="filterCategory('Higiene')">Higiene</button>
+            </div>
+        </div>
+
+        <div class="catalog-body">
+            <button id="btn-prev" class="side-btn nav-page-btn" onclick="prevPage()">‹</button>
+            <div class="products-grid" id="products-grid"></div>
+            <button id="btn-next" class="side-btn nav-page-btn" onclick="nextPage()">›</button>
+        </div>
+
+        <div class="pagination-info">
+            <span id="page-info">Página 1</span>
+        </div>
+    </main>
+
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tu carrito</h3>
+                <button class="close-modal" onclick="closeCart()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="col-left">
+                    <section class="checkout-section">
+                        <h4>Productos en el carrito</h4>
+                        <div id="cart-items-list">
+                            <p style="color:#666;">Tu carrito está vacío. Agrega productos desde la tienda.</p>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-right">
+                    <section class="checkout-section">
+                        <h4>Datos de envío</h4>
+                        <div class="form-grid">
+                            <input type="text" id="cliente-name" placeholder="Nombre del cliente" class="full-width">
+                            <input type="email" id="cliente-email" placeholder="Email (opcional)" class="full-width">
+                            <input type="text" id="direccion" placeholder="Dirección" class="full-width">
+                            <input type="text" id="ciudad" placeholder="Ciudad">
+                            <input type="text" id="codigo-postal" placeholder="Código Postal">
+                            <input type="text" id="estado-codigo" placeholder="Estado/Código">
+                            <input type="text" id="telefono" placeholder="Teléfono">
+                        </div>
+                    </section>
+                    <section class="checkout-section">
+                        <h4>Forma de pago</h4>
+                        <div class="payment-methods">
+                            <label class="pay-option"><input type="radio" name="pay" value="PayPal"> <i class="fab fa-paypal"></i> PayPal</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Mercado Pago"> <i class="fas fa-handshake"></i> Mercado Pago</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Tarjeta"> <i class="fas fa-credit-card"></i> Tarjeta</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Transferencia"> <i class="fas fa-university"></i> Transferencia</label>
+                            <label class="pay-option"><input type="radio" name="pay" value="Por recoger"> <i class="fas fa-store"></i> Por recoger</label>
+                        </div>
+                    </section>
+                    <section class="checkout-section calculator">
+                        <h4>Resumen</h4>
+                        <div class="summary-line"><span>Subtotal:</span> <span id="subtotal">$0.00</span></div>
+                        <div class="summary-line"><span>IVA (16%):</span> <span id="tax">$0.00</span></div>
+                        <div class="summary-line total"><span>Total a pagar:</span> <span id="total-final">$0.00</span></div>
+                        <label style="display:block;margin-top:12px;"><input type="checkbox" id="terms-checkbox"> Acepto los términos y condiciones.</label>
+                        <button id="confirm-purchase-btn" class="confirm-btn btn-action btn-red-gradient" onclick="confirmPurchase()" disabled style="margin-top:12px;width:100%;">Confirmar Compra</button>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="order-ticket-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ticket de Compra</h3>
+                <button class="close-modal" onclick="closeOrderTicket()">&times;</button>
+            </div>
+            <div id="order-ticket-body" class="modal-body" style="display:block; padding:20px; background:white;">
+                <!-- El ticket se genera aquí -->
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; padding:12px 20px; background:#f9f9f9;">
+                <button class="btn-action" onclick="closeOrderTicket()">Cerrar</button>
+                <button class="btn-action" onclick="reportOrder(document.querySelector('#order-ticket-body').dataset.orderId)">Reportar</button>
+                <button class="btn-action btn-red-gradient" onclick="printOrderTicket()">Imprimir ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="my-orders-modal" class="modal">
+        <div class="modal-content" style="max-width:720px;">
+            <div class="modal-header">
+                <h3>Mis Pedidos</h3>
+                <button class="close-modal" onclick="(function(){document.getElementById('my-orders-modal').classList.remove('open')})()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+                    <input id="my-orders-contact" placeholder="Teléfono o email" style="flex:1;padding:8px;border:1px solid #ccc;border-radius:6px;">
+                    <button class="btn-action btn-red-gradient" onclick="searchMyOrders()">Buscar</button>
+                </div>
+                <div>
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead><tr><th>ID</th><th>Cliente</th><th>Contacto</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="my-orders-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bottom-nav"></footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="../firebase-init.js"></script>
+    <script src="../script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', ()=>{
+            const terms = document.getElementById('terms-checkbox');
+            const confirmBtn = document.getElementById('confirm-purchase-btn');
+            if (terms && confirmBtn) {
+                confirmBtn.disabled = !terms.checked;
+                terms.addEventListener('change', ()=> confirmBtn.disabled = !terms.checked);
+            }
+            const openCartBtn = document.getElementById('open-cart-btn');
+            if (openCartBtn) openCartBtn.addEventListener('click', openCart);
+        });
+    </script>
 </body>
 </html>

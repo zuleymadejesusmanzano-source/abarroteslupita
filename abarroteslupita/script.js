@@ -78,9 +78,11 @@ function dedupeProducts(products) {
 }
 
 function isIndexCatalogPage() {
+    // Only consider the page editable when inside the admin folder.
+    // Client pages under /Clientes/ should NOT be editable or show stock.
     const path = window.location.pathname.toLowerCase();
-    const page = path.split('/').pop();
-    return page === '' || page === 'index.html' || page === 'index';
+    if (path.includes('/admin/') || path.includes('\\admin\\')) return true;
+    return false;
 }
 
 function getAssetPath(relativePath) {
